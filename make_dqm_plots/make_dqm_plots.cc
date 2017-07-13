@@ -14,6 +14,8 @@
 #include "TKey.h"
 
 #include "TCanvas.h"
+#include "TStyle.h"
+
 
 TCanvas *c1;
 
@@ -21,9 +23,34 @@ TCanvas *c1;
 template <typename TH>
 void plot_hist_to_pdf(TH *hist, TCanvas *c, std::string pathname)
 {
-    hist->Draw();
-    c->Update();
-    c->SaveAs((pathname + "/" + hist->GetName() + ".pdf").c_str());
+
+  gStyle->SetPalette(56);
+  gStyle->SetOptStat(0);
+  gStyle->SetNumberContours(50);
+
+  TString drawOpt("");
+  if (hist->InheritsFrom("TH2"))
+    drawOpt="COLZ2";
+  if (hist->InheritsFrom("TPoly"))
+    drawOpt="COLZ2 TEXT";
+  
+  hist->Draw(drawOpt);
+  c->Update();
+  c->SaveAs((pathname + "/" + hist->GetName() + ".pdf").c_str());
+  c->SaveAs((pathname + "/" + hist->GetName() + ".png").c_str());
+
+
+  // for some specific plots, we save them also in the main directory:
+
+  TString histName = hist->GetName();
+  if (histName.Contains("hexagons_occ_HA_bit") ||
+      histName.Contains("p_waveform_HG")) {
+    std::vector<std::string> strs;
+    boost::split(strs, pathname, boost::is_any_of("/"));
+    //for (Int_t i = 0; i < 5; ++i)
+    //std::cout<<strs[i]<<std::endl;
+    c->SaveAs(("/"+strs[0]+"/"+strs[1]+"/"+strs[2]+"/"+strs[3]+"/"+strs[4]+"/"+ + hist->GetName() + ".png").c_str());
+  }
 }
 
 // Iterate over hexaboard/layer/wire chamber
@@ -57,18 +84,21 @@ int main( int argc, char *argv[] )
         std::cout << "This script plots all histograms found in a rootfile from EUDAC." << std::endl;
         std::cout << std::endl;
         std::cout << "Usage:" << std::endl;
-        std::cout << "    make_dqm_plots *rootfile*" << std::endl;
+        std::cout << "    make_dqm_plots *RUNNUMBER*" << std::endl;
         exit(0);
     }
 
-    // Determine the name of the output directory
-    std::vector<std::string> strs;
-    boost::split(strs, argv[1], boost::is_any_of("/"));
-    for (Int_t i = 0; i < 5; ++i) strs[strs.size() - 1].pop_back();
-    std::string dirname = strs[strs.size() - 1] + "_dqm_plots";
 
     // Read in ROOT File
-    TFile *tfile = new TFile(argv[1], "READ");
+    std::string file_dirname = "/home/daq/eudaq-shift/data_root/run" + std::string(argv[1]) + ".root";
+    TFile *tfile = new TFile(file_dirname.c_str(), "READ");
+
+    // Determine the name of the output directory
+    //std::vector<std::string> strs;
+    //boost::split(strs, argv[1], boost::is_any_of("/"));
+    //for (Int_t i = 0; i < 5; ++i) strs[strs.size() - 1].pop_back();
+    std::string out_dirname = "/home/daq/web_dqm/RUN_" + std::string(argv[1]) + "_OnlineMon";
+
 
     // Canvas to draw all the plots on
     c1 = new TCanvas("c1", "c1", 500, 500);
@@ -81,9 +111,10 @@ int main( int argc, char *argv[] )
     {
        std::string subdet_name = key->GetName();
        // Create Directory structure
-       boost::filesystem::create_directories(dirname + "/" + subdet_name);
+       boost::filesystem::create_directories(out_dirname + "/" + subdet_name);
        TDirectoryFile *tdf_subdet = (TDirectoryFile*)key->ReadObj();
-       iter_over_detector_part(tdf_subdet, dirname + "/" + subdet_name + "/");
+       iter_over_detector_part(tdf_subdet, out_dirname + "/" + subdet_name + "/");
+
     }
 
     delete c1;
