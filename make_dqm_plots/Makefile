@@ -10,5 +10,5 @@ OBJ = $(patsubst %,%,$(_OBJ))
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 build: $(OBJ)
-	$(CC) -o make_dqm_plots $(LDFLAGS) make_dqm_plots.o
+	$(CC) -o make_dqm_plots.exe $(LDFLAGS) make_dqm_plots.o
 	rm -f *.o
