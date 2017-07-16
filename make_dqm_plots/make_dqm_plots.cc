@@ -142,7 +142,7 @@ int main( int argc, char *argv[] )
   if (argc == 4 && std::string(argv[2])=="cmssw") {
     board_id = std::string((argv[3]));
     file_name = "/home/daq/hexaDataAnalysis/rootData/julyBeamTest/HexaOutput_"+std::string(argv[1])+"_RDOUT" + std::string(board_id) + ".root";
-    out_dirname = "/home/daq/web_dqm/RUN_" + std::string(runNum) + "_CMSSW_DQM";
+    out_dirname = "/home/daq/web_dqm/RUN_" + std::string(runNum) + "_cmssw_DQM";
     cmssw = 1;
   }
 
